@@ -30,9 +30,10 @@ class UserProvider implements UserProviderInterface
 {
     private $entityManager;
     
-    public function __construct($entityManager)
+    public function __construct($entityManager, $webServiceConnection)
     {
         $this->entityManager = $entityManager;
+        $this->entityManager->getRepository('User')->setWebServiceConnection($webServiceConnection);
     }
     
     public function loadUserByUsername($hruid)

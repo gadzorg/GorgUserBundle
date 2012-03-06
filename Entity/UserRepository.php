@@ -22,18 +22,21 @@
 namespace Gorg\Bundle\UserBundle\Entity;
 
 use Doctrine\ORM\EntityRepository;
-use Symfony\Component\Security\Core\User\UserProviderInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
-
-use Gorg\Bundle\RemoteServiceBundle\Entity\UserManager;
 
 /**
- * UserRepository a class to provide a User 
+ * UserRepository a class to provide information on a User 
  */
 class UserRepository extends Entityrepository
 {
-    public function isRegistered($username)
+    private $webServiceConnection;
+    
+    public function setWebServiceConnection($webServiceConnection)
     {
-        return UserManager::isRegistered($username);
+        $this->$webServiceConnection = $webServiceConnection;
+    }
+    
+    public function isRegistered($hruid)
+    {
+        return $webServiceConnection->isRegistered($hruid);
     }
 }
