@@ -4,17 +4,15 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
-    <!--
+
     <parameters>
-        <parameter key="gorg_user.example.class">Gorg\Bundle\UserBundle\Example</parameter>
+        <parameter key="gorg_user.provider.class">Gorg\Bundle\UserBundle\Security\UserProvider</parameter>
     </parameters>
 
     <services>
-        <service id="gorg_user.example" class="%gorg_user.example.class%">
-            <argument type="service" id="service_id" />
-            <argument>plain_value</argument>
-            <argument>%parameter_name%</argument>
+        <service id="gorg_user.provider" class="%gorg_user.provider.class%">
+            <argument type="service" id="doctrine.orm.default_entity_manager"/>
         </service>
     </services>
-    -->
+
 </container>
