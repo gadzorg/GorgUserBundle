@@ -23,20 +23,16 @@ namespace Gorg\Bundle\UserBundle\Entity;
 
 use Symfony\Component\Security\Core\User\UserInterface;
 
-use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * User a class representing a User
  * 
- * @ORM\Entity(repositoryClass="Gorg\Bundle\UserBundle\Entity\UserRepository")
  */
 class User implements \Serializable, UserInterface
 {
     /**
      * Uniq string to identify a user
-     * @ORM\Column(name = "hruid", type = "string", length = 255, nullable = false, unique = true)
-     * @ORM\Id
      * @Assert\NotNull()
      * @Assert\NotBlank()
      */

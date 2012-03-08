@@ -21,24 +21,23 @@
 
 namespace Gorg\Bundle\UserBundle\Security;
 
-use Doctrine\Tests\ORM\Mapping\User;
 
 use Gorg\Bundle\UserBundle\Entity\User;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class UserProvider implements UserProviderInterface
 {
-    private $entityManager;
+    private $webServiceConnection;
     
-    public function __construct($entityManager, $webServiceConnection)
+    public function __construct($webServiceConnection)
     {
-        $this->entityManager = $entityManager;
-        $this->entityManager->getRepository('User')->setWebServiceConnection($webServiceConnection);
+        $this->webServiceConnection = $webServiceConnection;
     }
     
     public function loadUserByUsername($hruid)
     {
-        $userExist = $this->entityManager->getRepository('User')->isRegistered($hruid);
+        $userExist = $this->webServiceConnection->isRegistered($hruid);
         if($userExist != 1)
         {
             throw new UsernameNotFoundException('Could not find user. Sorry!');
@@ -50,7 +49,7 @@ class UserProvider implements UserProviderInterface
         return $user;
     }
 
-    public function refreshUser(User $user) {
+    public function refreshUser(UserInterface $user) {
         return $this->loadUserByUsername($user->getUsername());
     }
 
