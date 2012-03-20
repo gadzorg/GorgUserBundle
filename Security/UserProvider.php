@@ -23,6 +23,7 @@ namespace Gorg\Bundle\UserBundle\Security;
 
 
 use Gorg\Bundle\UserBundle\Entity\User;
+use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -43,8 +44,7 @@ class UserProvider implements UserProviderInterface
             throw new UsernameNotFoundException('Could not find user. Sorry!');
         }
         
-        $user = new User();
-        $user->setHruid($hruid);
+        $user = User::buildFromRawData($this->webServiceConnection->retriveUserData($hruid));
         
         return $user;
     }

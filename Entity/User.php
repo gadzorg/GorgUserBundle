@@ -177,4 +177,19 @@ class User implements \Serializable, UserInterface
             unset($this->data[$name]);
         }
     }
+
+    /**
+     * Build a user from data
+     */
+    public static function buildFromRawData($data)
+    {
+	$user = new User();
+	$profil = $data->profiles[0];
+	$user->setHruid($profil->hrid);
+	$data = get_object_vars($profil);
+	foreach($data as $key => $value) {
+		$user->set($key, $value);
+	}
+	return $user;
+    }
 }
