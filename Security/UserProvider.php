@@ -49,6 +49,13 @@ class UserProvider implements UserProviderInterface
         return $user;
     }
 
+    public function loadUserByUid($uid)
+    {
+        $user = User::buildFromRawData($this->webServiceConnection->retriveUserDataFromUid($uid));
+
+        return $user;
+    }
+
     public function refreshUser(UserInterface $user) {
         return $this->loadUserByUsername($user->getUsername());
     }
