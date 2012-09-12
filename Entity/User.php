@@ -18,33 +18,109 @@
  * Foundation, Inc.,                                                       *
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA                   *
  ***************************************************************************/
-
 namespace Gorg\Bundle\UserBundle\Entity;
 
+use Symfony\Component\Security\Core\User\AdvancedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-
-use Symfony\Component\Validator\Constraints as Assert;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
- * User a class representing a User
- * 
+ * Class for a User
+ *
+ * @category Authentication
+ * @package  UserBundle
+ * @author   Mathieu GOULIN <mathieu.goulin@gadz.org>
+ * @license  GNU General Public License
+ * @ORM\Entity
+ * @ORM\Table(name="CAS_USER_CACHE",
+ *      uniqueConstraints={@ORM\UniqueConstraint(name="user_unique",columns={"username"})},
+ *      indexes={@ORM\Index(name="search_username", columns={"username"})})
  */
-class User implements \Serializable, UserInterface
+class User implements AdvancedUserInterface, \Serializable
 {
     /**
-     * Uniq string to identify a user
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $hruid = null;
-    
-    /**
-     * Array to contains data of user
-     */
-    private $data = array();
+    protected $id;
 
     /**
-     * return null (no password for cas)
+     * @ORM\Column(type="string", length=255, nullable=false)
+     */
+    private $username;
+
+    /**
+     * @ORM\Column(type="string", length=100, nullable=true)
+     */
+    private $usernameAttribute = null; /* set null if no username attribute */
+
+    /**
+     * @ORM\Column(type="array")
+     */
+    private $attributes;
+
+    /**
+     * @ORM\Column(type="array")
+     */
+    private $roles;
+
+    /**
+     * Build a User object
+     * 
+     * @param String $username          the unique username
+     * @param Array  $attributes        the array of attribute of user
+     * @param String $usernameAttribute the attribute name for username
+     */
+    public function __construct($username, $attributes, $roleAttribute, $usernameAttribute = null)
+    {
+        $this->username          = $username;
+        $this->attributes        = $attributes;
+        $this->usernameAttribute = $usernameAttribute;
+	if($usernameAttribute)
+        {
+            if($attributes[$usernameAttribute] != $username)
+            {
+                throw new \InvalidArgumentException(sprintf('The attribute username value (%s) is not the same as username (%s)', $attributes[$usernameAttribute], $username));
+            }
+        }
+	$this->roles = array();
+        $this->addRole('user');
+	$this->addRole($attributes[$roleAttribute]);
+    }
+
+    /**
+     * Add Role on user
+     */
+    private function addRole($roleName)
+    {
+	if(preg_match('/^ROLE_/', $roleName))
+        {
+            $this->roles[] = strtoupper($roleName);
+            return;
+        }
+        $this->roles[] = 'ROLE_' . strtoupper($roleName);
+    }
+
+    /**
+     * Update attribute
+     * @param Array $attributes the new attributes
+     */
+    public function setAttributes($attributes)
+    {
+        $this->attributes = $attributes;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getRoles()
+    {
+        return $this->roles;
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function getPassword()
     {
@@ -52,7 +128,7 @@ class User implements \Serializable, UserInterface
     }
 
     /**
-     *  return null (no salt for cas)
+     * {@inheritdoc}
      */
     public function getSalt()
     {
@@ -60,136 +136,163 @@ class User implements \Serializable, UserInterface
     }
 
     /**
-     *  return null (no sensitive data for GorgCasUser)
-     */
-    public function eraseCredentials()
-    {
-        return null;
-    }
-
-    /**
-     * Return the username (hruid field)
+     * {@inheritdoc}
      */
     public function getUsername()
     {
-        return $this->hruid;
+        return $this->username;
     }
 
     /**
-     * Return true if username are same
+     * {@inheritdoc}
+     */
+    public function eraseCredentials()
+    {
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function equals(UserInterface $user)
     {
-        return (strcmp($user->getUsername(), $this->getUsername())==0);
-    }
-    
-    /**
-     * Serializing CasUser
-     * @param string $serialized
-     */
-    public function serialize() 
-    {
-        $classData = array(
-            'hruid' => $this->hruid,
-            'data' => $this->data,
-        );
-        return serialize($classData);
+        if (!$user instanceof User) {
+            return false;
+        }
+
+        if ($this->username !== $user->getUsername()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
-     * Unserializing CasUser
-     * @param string $serialized
+     * {@inheritdoc}
      */
-    public function unserialize($serialized)
+    public function isAccountNonExpired()
     {
-        $classData = unserialize($serialized);
-        $this->data = $classData['data'];
-        $this->hruid = $classData['hruid'];
+        return true;
     }
 
     /**
-     * Return user role
+     * {@inheritdoc}
      */
-    public function getRoles()
+    public function isAccountNonLocked()
     {
-        return array('ROLE_ADMIN','ROLE_USER');
+        return true;
     }
 
     /**
-     * Set hruid
+     * {@inheritdoc}
+     */
+    public function isCredentialsNonExpired()
+    {
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isEnabled()
+    {
+        return true;
+    }
+
+    /**
+     * Call non existant method
+     */
+    public function __call($name, $arguments)
+    {
+        if(preg_match('/^get/', $name))
+        {
+            if(count($arguments) > 0)
+            {
+                throw new \BadMethodCallException();
+            }
+            $varNameWithUpperLetter =  preg_replace('/^get/','', $name);
+            $varName = preg_replace('/\B([A-Z])/', '_$1', $varNameWithUpperLetter);
+            if(!isset($this->attributes[$varName]))
+            {
+                throw new \BadMethodCallException();
+            }
+            return $this->attributes[$varName];
+        }
+    }
+
+    public function serialize() {
+        return serialize(array(
+            'username'          => $this->username,
+            'usernameAttribute' => $this->usernameAttribute,
+            'attributes'        => $this->attributes,
+            'roles'             => $this->roles,
+        ));
+    }
+
+    public function unserialize($data) {
+        $data = unserialize($data);
+        $this->username          = $data['username'];
+        $this->usernameAttribute = $data['usernameAttribute'];
+        $this->attributes        = $data['attributes'];
+        $this->roles             = $data['roles'];
+    }
+
+    /**
+     * Get id
      *
-     * @param string $hruid
+     * @return integer 
      */
-    public function setHruid($hruid)
+    public function getId()
     {
-        $this->hruid = $hruid;
+        return $this->id;
     }
 
     /**
-     * Set a variable
-     * @param string $name
-     * @param $value
+     * Set username
+     *
+     * @param string $username
      */
-    public function set($name, $value)
+    public function setUsername($username)
     {
-        $this->data[$name] = $value;
+        $this->username = $username;
     }
 
     /**
-     * Overide all Getter 
-     * @param $name 
+     * Set usernameAttribute
+     *
+     * @param string $usernameAttribute
      */
-    public function __get($name)
+    public function setUsernameAttribute($usernameAttribute)
     {
-        if (property_exists($this, $name))
-        {
-            return $this->$name;
-        }
-
-        if (isset($this->data[$name]))
-        {
-            return $this->data[$name];
-        }
-        return null;
+        $this->usernameAttribute = $usernameAttribute;
     }
 
     /**
-     * return true if variable exist
-     * @param $name
+     * Get usernameAttribute
+     *
+     * @return string 
      */
-    public function __isset($name)
+    public function getUsernameAttribute()
     {
-        return property_exists($this, $name) || isset($this->data[$name]);
+        return $this->usernameAttribute;
     }
 
     /**
-     * Destroy variable 
-     * @param $name
+     * Get attributes
+     *
+     * @return array 
      */
-    public function __unset($name)
+    public function getAttributes()
     {
-        if (property_exists($this, $name))
-        {
-            $this->$name = null;
-        }
-        else
-        {
-            unset($this->data[$name]);
-        }
+        return $this->attributes;
     }
 
     /**
-     * Build a user from data
+     * Set roles
+     *
+     * @param array $roles
      */
-    public static function buildFromRawData($data)
+    public function setRoles($roles)
     {
-	$user = new User();
-	$profil = $data->profiles[0];
-	$user->setHruid($profil->hrid);
-	$data = get_object_vars($profil);
-	foreach($data as $key => $value) {
-		$user->set($key, $value);
-	}
-	return $user;
+        $this->roles = $roles;
     }
 }
