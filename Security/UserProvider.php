@@ -29,28 +29,40 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class UserProvider implements UserProviderInterface
 {
-    private $webServiceConnection;
+    private $logger;
+    private $buzz;
+    private $apiUser;
+    private $apiPassword;
+    private $apiPath;
+    private $apiServer;
     
-    public function __construct($webServiceConnection)
+    public function __construct($logger, $buzz, $apiUser, $apiPassword, $apiPath, $apiServer)
     {
-        $this->webServiceConnection = $webServiceConnection;
+        $this->logger      = $logger;
+        $this->buzz        = $buzz;
+        $this->apiUser     = $apiUser;
+        $this->apiPassword = $apiPassword;
+        $this->apiPath     = $apiPath;
+        $this->apiServer   = $apiServer;
     }
     
     public function loadUserByUsername($hruid)
     {
-        $userExist = $this->webServiceConnection->isRegistered($hruid);
-        if($userExist != 1)
-        {
-            throw new UsernameNotFoundException('Could not find user. Sorry!');
-        }
-        
-        $user = User::buildFromRawData($this->webServiceConnection->retriveUserData($hruid));
-        
-        return $user;
+       
+       $request = new \Buzz\Message\Request('GET', $this->apiPath . '/accounts/' . $hruid . '/accounts.json', $this->apiServer);
+       $response = new \Buzz\Message\Response();
+
+       $request->addHeader('Authorization: Basic '.base64_encode($this->apiUser.':'.$this->apiPassword));
+       
+       $this->buzz->send($request, $response);
+       $findUsers = json_decode($response->getContent());
+       $userStdClass = $findUsers[0];
+       return User::buildFromStdClass($userStdClass);
     }
 
     public function loadUserByUid($uid)
     {
+
         $user = User::buildFromRawData($this->webServiceConnection->retriveUserDataFromUid($uid));
 
         return $user;

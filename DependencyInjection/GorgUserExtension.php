@@ -21,6 +21,10 @@ class GorgUserExtension extends Extension
     {
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
+        $container->setParameter('api_user', $config['user']);
+        $container->setParameter('api_password', $config['password']);
+        $container->setParameter('api_path', $config['path']);
+        $container->setParameter('api_server', $config['server']);
 
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');

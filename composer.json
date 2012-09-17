@@ -1,0 +1,25 @@
+{
+    "name": "gorg/user-bundle",
+    "type": "symfony-bundle",
+    "description": "Implements Gadz.org Webservice UserProvider on your website",
+    "keywords": ["authentication", "user-provider", "webservice", "gorg"],
+    "homepage": "http://opensource.gadz.org/x/IwBO",
+    "license": "GPL",
+    "authors": [
+        {
+            "name": "Mathieu GOULIN",
+            "email": "mathieu.goulin@gadz.org"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.2",
+        "sensio/buzz-bundle"
+    },
+    "autoload": {
+        "psr-0": { "Gorg\\Bundle\\UserBundle": "" }
+    },
+    "minimum-stability": "dev",
+    "target-dir": "Gorg/bundle/UserBundle",
+    "extra": {
+    }
+}

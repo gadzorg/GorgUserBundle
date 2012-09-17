@@ -31,37 +31,31 @@ use Doctrine\ORM\Mapping as ORM;
  * @package  UserBundle
  * @author   Mathieu GOULIN <mathieu.goulin@gadz.org>
  * @license  GNU General Public License
- * @ORM\Entity
- * @ORM\Table(name="CAS_USER_CACHE",
- *      uniqueConstraints={@ORM\UniqueConstraint(name="user_unique",columns={"username"})},
- *      indexes={@ORM\Index(name="search_username", columns={"username"})})
  */
 class User implements AdvancedUserInterface, \Serializable
 {
     /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @var $id
      */
     protected $id;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=false)
+     * @var $username
      */
     private $username;
 
     /**
-     * @ORM\Column(type="string", length=100, nullable=true)
+     * @var $usernameAttribute
      */
     private $usernameAttribute = null; /* set null if no username attribute */
 
     /**
-     * @ORM\Column(type="array")
+     * @var $attributes
      */
     private $attributes;
 
     /**
-     * @ORM\Column(type="array")
+     * @var $roles
      */
     private $roles;
 
@@ -294,5 +288,12 @@ class User implements AdvancedUserInterface, \Serializable
     public function setRoles($roles)
     {
         $this->roles = $roles;
+    }
+
+    public static function buildFromStdClass(\stdClass $baseUserInstance)
+    {
+        $vars = get_object_vars($baseUserInstance);
+        return new User($baseUserInstance->hruid, $vars, 'groups', 'hruid');
+
     }
 }
