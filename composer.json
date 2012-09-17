@@ -19,7 +19,7 @@
         "psr-0": { "Gorg\\Bundle\\UserBundle": "" }
     },
     "minimum-stability": "dev",
-    "target-dir": "Gorg/bundle/UserBundle",
+    "target-dir": "Gorg/Bundle/UserBundle",
     "extra": {
     }
 }
