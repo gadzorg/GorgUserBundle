@@ -80,7 +80,9 @@ class User implements AdvancedUserInterface, \Serializable
         }
 	$this->roles = array();
         $this->addRole('user');
-	$this->addRole($attributes[$roleAttribute]);
+        if(isset($attributes[$roleAttribute])) {
+            $this->addRole($attributes[$roleAttribute]);
+        }
     }
 
     /**

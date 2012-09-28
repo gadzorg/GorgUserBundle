@@ -56,7 +56,11 @@ class UserProvider implements UserProviderInterface
        
        $this->buzz->send($request, $response);
        $findUsers = json_decode($response->getContent());
-       $userStdClass = $findUsers[0];
+       if(is_array($findUsers)) {
+           $userStdClass = $findUsers[0];
+       } else {
+           $userStdClass = $findUsers;
+       }
        return User::buildFromStdClass($userStdClass);
     }
 
