@@ -61,6 +61,19 @@ class UserProvider implements UserProviderInterface
        } else {
            $userStdClass = $findUsers;
        }
+
+       $request = new \Buzz\Message\Request('GET', $this->apiPath . '/accounts/' . $hruid . '/roles.json', $this->apiServer);
+       $response = new \Buzz\Message\Response();
+
+       $request->addHeader('Authorization: Basic '.base64_encode($this->apiUser.':'.$this->apiPassword));
+
+       $this->buzz->send($request, $response);
+       $roles = json_decode($response->getContent());
+       $userStdClass->groups = array();
+       foreach ($roles as $role) {
+           $userStdClass->groups[] = $role->name;
+       }
+
        return User::buildFromStdClass($userStdClass);
     }
 
